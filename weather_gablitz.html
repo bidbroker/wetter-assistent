@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏠 Kellerlüftungs-Assistent für Gablitz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .header .settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .header .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .settings {
+            background: #f8f9fa;
+            padding: 25px;
+            border-bottom: 2px solid #e9ecef;
+            display: none;
+        }
+
+        .settings.active {
+            display: block;
+        }
+
+        .settings h2 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-field label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .input-field input {
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .input-field input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-close {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-close:hover {
+            background: #c82333;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            padding: 30px;
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-card {
+            border-left: 5px solid #28a745;
+        }
+
+        .status-card.warning {
+            border-left: 5px solid #ffc107;
+        }
+
+        .status-card.danger {
+            border-left: 5px solid #dc3545;
+        }
+
+        .status-icon {
+            font-size: 2em;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .info-label {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #495057;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .best-window {
+            background: #d4edda !important;
+            font-weight: 600;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge-warning {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .badge-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .detail-table {
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+
+        .detail-table th {
+            font-size: 0.85em;
+        }
+
+        .hint-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+
+        .hint-box h3 {
+            color: #1976D2;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .hint-box ul {
+            margin-left: 20px;
+        }
+
+        .hint-box li {
+            margin-bottom: 5px;
+            color: #495057;
+        }
+
+        .collapsible-section {
+            margin-bottom: 25px;
+        }
+
+        .collapsible-header {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+            border: 2px solid #e9ecef;
+        }
+
+        .collapsible-header:hover {
+            background: #e9ecef;
+        }
+
+        .collapsible-header h3 {
+            margin: 0;
+            font-size: 1.2em;
+            color: #495057;
+        }
+
+        .collapsible-arrow {
+            font-size: 1.5em;
+            transition: transform 0.3s;
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .collapsible-content.active {
+            max-height: 10000px;
+            transition: max-height 0.5s ease-in;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                border-radius: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.3em;
+                padding-right: 0;
+            }
+
+            .header p {
+                font-size: 0.9em;
+            }
+
+            .header .settings-btn {
+                position: static;
+                display: block;
+                width: 100%;
+                margin-top: 15px;
+                padding: 12px 20px;
+            }
+
+            .settings, .results {
+                padding: 20px;
+            }
+
+            .card {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .card-header {
+                font-size: 1.2em;
+                flex-wrap: wrap;
+            }
+
+            .input-group {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .info-item {
+                padding: 12px;
+            }
+
+            .info-label {
+                font-size: 0.8em;
+            }
+
+            .info-value {
+                font-size: 1.2em;
+            }
+
+            /* Top Info Box Mobile */
+            div[style*="grid-template-columns: 1fr auto 1fr"] {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+            }
+
+            div[style*="grid-template-columns: 1fr auto 1fr"] > div:nth-child(2) {
+                display: none !important;
+            }
+
+            /* Make tables scrollable on mobile */
+            .table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -15px;
+                padding: 0 15px;
+            }
+
+            table {
+                font-size: 0.85em;
+                min-width: 600px;
+            }
+
+            th, td {
+                padding: 8px 6px;
+                font-size: 0.9em;
+            }
+
+            .detail-table {
+                font-size: 0.8em;
+            }
+
+            .badge {
+                font-size: 0.75em;
+                padding: 3px 8px;
+                display: inline-block;
+                white-space: nowrap;
+            }
+
+            /* Warning boxes on mobile */
+            .card > div[style*="border: 2px solid"] {
+                padding: 12px !important;
+                margin-bottom: 12px !important;
+            }
+
+            .card > div[style*="border: 2px solid"] p {
+                font-size: 0.9em !important;
+            }
+
+            .hint-box {
+                padding: 12px;
+                font-size: 0.9em;
+            }
+
+            .hint-box h3 {
+                font-size: 1em;
+            }
+
+            .hint-box li {
+                font-size: 0.85em;
+                margin-bottom: 8px;
+            }
+
+            .collapsible-header h3 {
+                font-size: 1em;
+            }
+
+            /* Improve touch targets */
+            .collapsible-header {
+                padding: 12px;
+                min-height: 48px;
+            }
+        }
+
+        /* Extra small phones */
+        @media (max-width: 375px) {
+            .header h1 {
+                font-size: 1.1em;
+            }
+
+            .header p {
+                font-size: 0.85em;
+            }
+
+            .card-header {
+                font-size: 1.1em;
+            }
+
+            .info-value {
+                font-size: 1.1em;
+            }
+
+            table {
+                min-width: 550px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="settings-btn" onclick="toggleSettings()">⚙️ Einstellungen</button>
+            <h1>🏠 Kellerlüftungs-Assistent für Gablitz</h1>
+            <p>Optimale Lüftungszeiten basierend auf absoluter Luftfeuchtigkeit</p>
+        </div>
+
+        <div class="settings" id="settings">
+            <h2>⚙️ Kellerbedingungen anpassen</h2>
+            <div class="input-group">
+                <div class="input-field">
+                    <label for="basementTemp">🌡️ Kellertemperatur (°C)</label>
+                    <input type="number" id="basementTemp" value="21" step="0.5" min="5" max="25">
+                </div>
+                <div class="input-field">
+                    <label for="basementHumidity">💧 Relative Luftfeuchtigkeit (%)</label>
+                    <input type="number" id="basementHumidity" value="60" step="1" min="30" max="100">
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="applySettingsAndAnalyze()">✓ Übernehmen & Neu berechnen</button>
+                <button class="btn-secondary" onclick="resetToDefaults()">↺ Standardwerte</button>
+                <button class="btn-close" onclick="toggleSettings()">✕ Schließen</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 15px; color: #6c757d;">Wetterdaten werden abgerufen...</p>
+        </div>
+
+        <div class="results" id="results">
+            <!-- Results will be inserted here by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Calculate absolute humidity in g/m³
+        function calculateAbsoluteHumidity(temperature, relativeHumidity) {
+            const a = 17.27;
+            const b = 237.7;
+            const saturationVaporPressure = 6.112 * Math.exp((a * temperature) / (b + temperature));
+            const actualVaporPressure = (relativeHumidity / 100) * saturationVaporPressure;
+            const absoluteHumidity = (actualVaporPressure * 100 * 2.1674) / (temperature + 273.15);
+            return absoluteHumidity;
+        }
+
+        /**
+         * KRITERIEN FÜR LÜFTUNGSEMPFEHLUNGEN:
+         *
+         * LANGES LÜFTEN (Normal):
+         * - Außentemperatur >= Kellertemperatur
+         * - Keine Gefahr der Auskühlung
+         * - Kann mehrere Stunden durchgehend gelüftet werden
+         *
+         * STOSSLÜFTEN (Nur 5 Minuten):
+         * - Außentemperatur < Kellertemperatur
+         * - Gefahr der Auskühlung
+         * - Nur 5 Minuten pro Stunde lüften
+         */
+
+        // Check if outside temperature requires shock ventilation (Stoßlüften)
+        function requiresShockVentilation(outsideTemp, basementTemp) {
+            return outsideTemp < basementTemp;
+        }
+
+        // Get ventilation advice
+        function getVentilationAdvice(outsideAbsHumidity, basementAbsHumidity, outsideTemp, basementTemp) {
+            const difference = basementAbsHumidity - outsideAbsHumidity;
+            const needsShockVentilation = requiresShockVentilation(outsideTemp, basementTemp);
+            const tempDifference = basementTemp - outsideTemp;
+
+            if (difference > 1.5) {
+                return {
+                    shouldVentilate: true,
+                    status: 'GUT ZUM LÜFTEN',
+                    statusClass: 'success',
+                    icon: '✅',
+                    difference: difference,
+                    needsShockVentilation: needsShockVentilation,
+                    tempDifference: tempDifference,
+                    duration: needsShockVentilation ? 'Nur 5 Min. Stoßlüften!' : 'Normal lüften'
+                };
+            } else if (difference > 0) {
+                return {
+                    shouldVentilate: false,
+                    status: 'BEDINGT GEEIGNET',
+                    statusClass: 'warning',
+                    icon: '⚠️',
+                    difference: difference,
+                    needsShockVentilation: needsShockVentilation,
+                    tempDifference: tempDifference,
+                    duration: needsShockVentilation ? 'Nur 5 Min. Stoßlüften!' : 'Kurz lüften'
+                };
+            } else {
+                return {
+                    shouldVentilate: false,
+                    status: 'NICHT LÜFTEN',
+                    statusClass: 'danger',
+                    icon: '❌',
+                    difference: Math.abs(difference),
+                    needsShockVentilation: needsShockVentilation,
+                    tempDifference: tempDifference,
+                    duration: 'Nicht lüften'
+                };
+            }
+        }
+
+        // Find consecutive ventilation windows
+        function findVentilationWindows(goodTimes, basementTemp) {
+            if (goodTimes.length === 0) return [];
+
+            const windows = [];
+            let currentWindow = {
+                start: goodTimes[0].time,
+                end: goodTimes[0].time,
+                hours: [goodTimes[0]],
+                duration: 1
+            };
+
+            for (let i = 1; i < goodTimes.length; i++) {
+                const prevTime = goodTimes[i - 1].time;
+                const currTime = goodTimes[i].time;
+                const hoursDiff = (currTime - prevTime) / (1000 * 60 * 60);
+
+                // Check if temperature category changed (shock ventilation requirement)
+                const prevNeedsShock = requiresShockVentilation(goodTimes[i - 1].temp, basementTemp);
+                const currNeedsShock = requiresShockVentilation(goodTimes[i].temp, basementTemp);
+
+                // Continue window only if consecutive hour AND same temperature category
+                if (hoursDiff === 1 && prevNeedsShock === currNeedsShock) {
+                    currentWindow.hours.push(goodTimes[i]);
+                    currentWindow.end = currTime;
+                    currentWindow.duration++;
+                } else {
+                    // End current window and start new one
+                    windows.push(calculateWindowStats(currentWindow, basementTemp));
+                    currentWindow = {
+                        start: currTime,
+                        end: currTime,
+                        hours: [goodTimes[i]],
+                        duration: 1
+                    };
+                }
+            }
+
+            windows.push(calculateWindowStats(currentWindow, basementTemp));
+
+            // Sort windows: warm windows first (normal ventilation possible), then by difference
+            windows.sort((a, b) => {
+                // First priority: windows without shock ventilation requirement (warmer = better)
+                if (!a.needsShockVentilation && b.needsShockVentilation) return -1;
+                if (a.needsShockVentilation && !b.needsShockVentilation) return 1;
+
+                // Second priority: highest humidity advantage
+                return b.avgDifference - a.avgDifference;
+            });
+
+            // Mark the best window (first after sorting)
+            if (windows.length > 0) {
+                windows[0].isBest = true;
+            }
+
+            return windows;
+        }
+
+        // Calculate window statistics
+        function calculateWindowStats(window, basementTemp) {
+            const hours = window.hours;
+            const count = hours.length;
+
+            const avgTemp = hours.reduce((sum, h) => sum + h.temp, 0) / count;
+            const avgAbsHum = hours.reduce((sum, h) => sum + h.absHum, 0) / count;
+            const avgDifference = hours.reduce((sum, h) => sum + h.difference, 0) / count;
+
+            // Apply shock ventilation criteria: outside temp < basement temp
+            const needsShockVentilation = requiresShockVentilation(avgTemp, basementTemp);
+
+            return {
+                start: window.start,
+                end: window.end,
+                duration: window.duration,
+                avgTemp: avgTemp,
+                avgAbsHum: avgAbsHum,
+                avgDifference: avgDifference,
+                isBest: false,
+                needsShockVentilation: needsShockVentilation
+            };
+        }
+
+        // Format date and time
+        function formatDateTime(date) {
+            return date.toLocaleString('de-AT', {
+                day: '2-digit',
+                month: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('de-AT', {
+                weekday: 'long',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString('de-AT', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Toggle settings panel
+        function toggleSettings() {
+            const settingsDiv = document.getElementById('settings');
+            settingsDiv.classList.toggle('active');
+        }
+
+        // Apply settings and analyze
+        function applySettingsAndAnalyze() {
+            toggleSettings();
+            analyzeVentilation();
+        }
+
+        // Reset to default values
+        function resetToDefaults() {
+            document.getElementById('basementTemp').value = 21;
+            document.getElementById('basementHumidity').value = 60;
+        }
+
+        // Toggle collapsible sections
+        function toggleCollapsible(id) {
+            const content = document.getElementById(id);
+            const arrow = content.previousElementSibling.querySelector('.collapsible-arrow');
+
+            content.classList.toggle('active');
+            if (content.classList.contains('active')) {
+                arrow.style.transform = 'rotate(180deg)';
+            } else {
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Main analysis function
+        async function analyzeVentilation() {
+            const basementTemp = parseFloat(document.getElementById('basementTemp').value);
+            const basementRelHumidity = parseFloat(document.getElementById('basementHumidity').value);
+
+            if (isNaN(basementTemp) || isNaN(basementRelHumidity)) {
+                alert('Bitte geben Sie gültige Werte ein!');
+                return;
+            }
+
+            const basementAbsHumidity = calculateAbsoluteHumidity(basementTemp, basementRelHumidity);
+
+            // Show loading
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+
+            try {
+                // Gablitz coordinates
+                const latitude = 48.2333;
+                const longitude = 16.1167;
+
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=relative_humidity_2m,temperature_2m&timezone=Europe/Vienna&forecast_days=2`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                const hourly = data.hourly;
+                const times = hourly.time;
+                const humidity = hourly.relative_humidity_2m;
+                const temperature = hourly.temperature_2m;
+
+                // Process data
+                const goodTimes = [];
+                const allTimes = [];
+
+                times.forEach((timeStr, i) => {
+                    const date = new Date(timeStr);
+                    const temp = temperature[i];
+                    const relHum = humidity[i];
+                    const absHum = calculateAbsoluteHumidity(temp, relHum);
+                    const advice = getVentilationAdvice(absHum, basementAbsHumidity, temp, basementTemp);
+
+                    const timeData = {
+                        time: date,
+                        temp: temp,
+                        relHum: relHum,
+                        absHum: absHum,
+                        difference: basementAbsHumidity - absHum,
+                        advice: advice
+                    };
+
+                    allTimes.push(timeData);
+
+                    if (advice.shouldVentilate) {
+                        goodTimes.push(timeData);
+                    }
+                });
+
+                // Find current hour
+                const now = new Date();
+                const currentHourData = allTimes.find(t => t.time >= now) || allTimes[0];
+
+                // Find ventilation windows
+                const ventilationWindows = findVentilationWindows(goodTimes, basementTemp);
+
+                // Display results
+                displayResults(currentHourData, ventilationWindows, allTimes, basementTemp, basementRelHumidity, basementAbsHumidity);
+
+            } catch (error) {
+                alert('Fehler beim Abrufen der Wetterdaten: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+            }
+        }
+
+        // Display results
+        function displayResults(currentHourData, ventilationWindows, allTimes, basementTemp, basementRelHumidity, basementAbsHumidity) {
+            const resultsDiv = document.getElementById('results');
+
+            // Scroll to top of results
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            let html = '';
+
+            // 0. CURRENT CONDITIONS - Hauptfokus auf absolute Luftfeuchtigkeit
+            const differenceAbs = Math.abs(currentHourData.difference);
+            const isDrier = currentHourData.difference > 0;
+
+            html += `
+                <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 30px 25px;">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <h2 style="margin: 0; font-size: 1.8em; color: white;">💧 Absolute Luftfeuchtigkeit</h2>
+                        <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 0.95em;">Entscheidend für Lüftungsempfehlung</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: center; margin-bottom: 20px;">
+                        <!-- AUSSEN -->
+                        <div style="text-align: center; background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3);">
+                            <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 8px; font-weight: 600;">🌤️ AUẞEN</div>
+                            <div style="font-size: 3em; font-weight: bold; line-height: 1; margin-bottom: 5px;">${currentHourData.absHum.toFixed(1)}</div>
+                            <div style="font-size: 1.2em; opacity: 0.9;">g/m³</div>
+                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.3); font-size: 0.85em; opacity: 0.8;">
+                                ${currentHourData.temp.toFixed(1)}°C • ${currentHourData.relHum}%
+                            </div>
+                        </div>
+
+                        <!-- VERGLEICH -->
+                        <div style="text-align: center; font-size: 2em;">
+                            ${isDrier ? '◀' : '▶'}
+                        </div>
+
+                        <!-- INNEN (KELLER) -->
+                        <div style="text-align: center; background: rgba(255,255,255,0.15); padding: 25px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3);">
+                            <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 8px; font-weight: 600;">🏠 KELLER</div>
+                            <div style="font-size: 3em; font-weight: bold; line-height: 1; margin-bottom: 5px;">${basementAbsHumidity.toFixed(1)}</div>
+                            <div style="font-size: 1.2em; opacity: 0.9;">g/m³</div>
+                            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.3); font-size: 0.85em; opacity: 0.8;">
+                                ${basementTemp.toFixed(1)}°C • ${basementRelHumidity}%
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DIFFERENZ -->
+                    <div style="background: ${isDrier ? 'rgba(40, 167, 69, 0.3)' : 'rgba(220, 53, 69, 0.3)'};
+                                border: 2px solid ${isDrier ? 'rgba(40, 167, 69, 0.6)' : 'rgba(220, 53, 69, 0.6)'};
+                                border-radius: 10px; padding: 15px; text-align: center;">
+                        <div style="font-size: 1.4em; font-weight: bold;">
+                            ${isDrier ? '✅' : '❌'}
+                            Außen ist ${differenceAbs.toFixed(1)} g/m³ ${isDrier ? 'TROCKENER' : 'FEUCHTER'}
+                        </div>
+                        <div style="font-size: 0.9em; margin-top: 8px; opacity: 0.95;">
+                            ${isDrier
+                                ? '→ Lüften reduziert Feuchtigkeit im Keller'
+                                : '→ Lüften würde Feuchtigkeit im Keller erhöhen'
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 1. BEST VENTILATION WINDOW
+            if (ventilationWindows.length > 0) {
+                const bestWindow = ventilationWindows.find(w => w.isBest);
+
+                html += `
+                    <div class="card status-card success">
+                        <div class="card-header">
+                            <span class="status-icon">🏆</span>
+                            <span>Bestes Lüftungsfenster</span>
+                        </div>
+                `;
+
+                if (bestWindow.needsShockVentilation) {
+                    html += `
+                        <div style="background: #e7f3ff; border: 2px solid #0066cc; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <span style="font-size: 1.5em;">❄️</span>
+                                <strong style="color: #0066cc; font-size: 1.1em;">STOẞLÜFTEN ERFORDERLICH im optimalen Zeitfenster</strong>
+                            </div>
+                            <p style="color: #495057; margin-bottom: 5px;">
+                                <strong>Kriterium:</strong> Ø Außentemperatur (${bestWindow.avgTemp.toFixed(1)}°C) ist niedriger als Kellertemperatur (${basementTemp}°C)
+                            </p>
+                            <p style="color: #0066cc; font-weight: bold; font-size: 1.05em;">
+                                ⏱️ Empfehlung: Nur 5 Minuten pro Stunde Stoßlüften, um Auskühlung zu vermeiden!
+                            </p>
+                        </div>
+                    `;
+                }
+
+                html += `
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">📅 Datum</div>
+                                <div class="info-value" style="font-size: 1.1em;">${formatDate(bestWindow.start)}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">🕐 Zeitfenster</div>
+                                <div class="info-value">${formatTime(bestWindow.start)} - ${formatTime(bestWindow.end)}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">⏱️ Lüftungsdauer</div>
+                                <div class="info-value">
+                                    ${bestWindow.needsShockVentilation
+                                        ? `${bestWindow.duration} × 5 Min.`
+                                        : `${bestWindow.duration} Stunde${bestWindow.duration > 1 ? 'n' : ''}`
+                                    }
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">🌡️ Ø Temperatur</div>
+                                <div class="info-value">${bestWindow.avgTemp.toFixed(1)}°C</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">💧 Ø Abs. Feuchte</div>
+                                <div class="info-value">${bestWindow.avgAbsHum.toFixed(1)} g/m³</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">✅ Vorteil</div>
+                                <div class="info-value">${bestWindow.avgDifference.toFixed(1)} g/m³</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="card status-card danger">
+                        <div class="card-header">
+                            <span class="status-icon">⚠️</span>
+                            <span>Keine geeigneten Lüftungszeiten</span>
+                        </div>
+                        <p style="font-size: 1.1em; margin-bottom: 10px;">
+                            ❌ In den nächsten 48 Stunden gibt es KEINE guten Lüftungszeitfenster!
+                        </p>
+                        <p style="color: #6c757d;">
+                            Die Außenluft ist durchgehend zu feucht. Kellerlüftung würde die Feuchtigkeit erhöhen statt reduzieren.
+                        </p>
+                        <p style="color: #6c757d; margin-top: 10px;">
+                            💡 Tipp: Versuchen Sie es später noch einmal oder warten Sie auf kühlere/trockenere Wetterbedingungen.
+                        </p>
+                    </div>
+                `;
+            }
+
+            // 2. CURRENT STATUS
+            const statusClass = currentHourData.advice.statusClass;
+            const needsShockNow = currentHourData.advice.needsShockVentilation;
+
+            html += `
+                <div class="card status-card ${statusClass}">
+                    <div class="card-header">
+                        <span class="status-icon">${currentHourData.advice.icon}</span>
+                        <span>Jetzt lüften?</span>
+                    </div>
+                    <h2 style="color: ${statusClass === 'success' ? '#28a745' : statusClass === 'warning' ? '#ffc107' : '#dc3545'}; margin-bottom: 15px;">
+                        ${currentHourData.advice.status}
+                    </h2>
+            `;
+
+            if (needsShockNow && (currentHourData.advice.shouldVentilate || currentHourData.advice.statusClass === 'warning')) {
+                html += `
+                    <div style="background: #e7f3ff; border: 2px solid #0066cc; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <span style="font-size: 1.5em;">❄️</span>
+                            <strong style="color: #0066cc; font-size: 1.1em;">STOẞLÜFTEN ERFORDERLICH</strong>
+                        </div>
+                        <p style="color: #495057; margin-bottom: 5px;">
+                            <strong>Kriterium:</strong> Außentemperatur (${currentHourData.temp.toFixed(1)}°C) ist niedriger als Kellertemperatur (${basementTemp}°C)
+                        </p>
+                        <p style="color: #0066cc; font-weight: bold; font-size: 1.05em;">
+                            ⏱️ Empfehlung: Nur 5 Minuten Stoßlüften, um Auskühlung zu vermeiden!
+                        </p>
+                    </div>
+                `;
+            }
+
+            html += `
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Außentemperatur</div>
+                            <div class="info-value">${currentHourData.temp.toFixed(1)}°C</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Rel. Luftfeuchtigkeit</div>
+                            <div class="info-value">${currentHourData.relHum}%</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Abs. Luftfeuchtigkeit</div>
+                            <div class="info-value">${currentHourData.absHum.toFixed(1)} g/m³</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">
+                                ${currentHourData.difference > 0 ? 'Vorteil' : 'Nachteil'}
+                            </div>
+                            <div class="info-value">
+                                ${Math.abs(currentHourData.difference).toFixed(1)} g/m³
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 3. ALL VENTILATION WINDOWS - Split into normal and shock ventilation windows
+            if (ventilationWindows.length > 1) {
+                const normalWindows = ventilationWindows.filter(w => !w.needsShockVentilation);
+                const shockWindows = ventilationWindows.filter(w => w.needsShockVentilation);
+
+                // Normal ventilation windows (longer ventilation possible)
+                if (normalWindows.length > 0) {
+                    html += `
+                        <div class="card">
+                            <div class="card-header">
+                                🌡️ Normale Lüftungszeitfenster (länger lüften möglich)
+                            </div>
+                            <div style="background: #d4edda; border: 2px solid #28a745; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                                <strong style="color: #155724;">✅ Kriterium:</strong>
+                                <span style="color: #495057;">Außentemperatur ≥ Kellertemperatur → Keine Auskühlung → Längeres Lüften möglich</span>
+                            </div>
+                            <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Datum</th>
+                                        <th>Zeitfenster</th>
+                                        <th>Dauer</th>
+                                        <th>Ø Temp.</th>
+                                        <th>Ø Abs. Feuchte</th>
+                                        <th>Vorteil</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+
+                    normalWindows.forEach(window => {
+                        const rowClass = window.isBest ? 'best-window' : '';
+                        const marker = window.isBest ? '🏆' : '';
+
+                        html += `
+                            <tr class="${rowClass}">
+                                <td>${marker}</td>
+                                <td>${window.start.toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit' })}</td>
+                                <td>${formatTime(window.start)} - ${formatTime(window.end)}</td>
+                                <td>${window.duration}h</td>
+                                <td>${window.avgTemp.toFixed(1)}°C</td>
+                                <td>${window.avgAbsHum.toFixed(1)} g/m³</td>
+                                <td>${window.avgDifference.toFixed(1)} g/m³</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `
+                                </tbody>
+                            </table>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Shock ventilation windows
+                if (shockWindows.length > 0) {
+                    html += `
+                        <div class="card" style="border-left: 5px solid #0066cc;">
+                            <div class="card-header">
+                                ❄️ Stoßlüftungs-Zeitfenster (nur 5 Minuten pro Stunde)
+                            </div>
+                            <div style="background: #e7f3ff; border: 2px solid #0066cc; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                                <strong style="color: #0066cc;">⏱️ Kriterium:</strong>
+                                <span style="color: #495057;">Außentemperatur < Kellertemperatur → Gefahr der Auskühlung → Nur 5 Minuten pro Stunde lüften!</span>
+                            </div>
+                            <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Datum</th>
+                                        <th>Zeitfenster</th>
+                                        <th>Dauer</th>
+                                        <th>Ø Temp.</th>
+                                        <th>Ø Abs. Feuchte</th>
+                                        <th>Vorteil</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+
+                    shockWindows.forEach(window => {
+                        const rowClass = window.isBest ? 'best-window' : '';
+                        const marker = window.isBest ? '🏆' : '';
+
+                        html += `
+                            <tr class="${rowClass}">
+                                <td>${marker} ❄️</td>
+                                <td>${window.start.toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit' })}</td>
+                                <td>${formatTime(window.start)} - ${formatTime(window.end)}</td>
+                                <td>${window.duration} × 5 Min.</td>
+                                <td>${window.avgTemp.toFixed(1)}°C</td>
+                                <td>${window.avgAbsHum.toFixed(1)} g/m³</td>
+                                <td>${window.avgDifference.toFixed(1)} g/m³</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `
+                                </tbody>
+                            </table>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            // 4. COLLAPSIBLE SECTIONS
+            // Basement conditions
+            html += `
+                <div class="collapsible-section">
+                    <div class="collapsible-header" onclick="toggleCollapsible('basement-details')">
+                        <h3>📊 Kellerbedingungen</h3>
+                        <span class="collapsible-arrow">▼</span>
+                    </div>
+                    <div class="collapsible-content" id="basement-details">
+                        <div class="card" style="margin-top: 10px;">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <div class="info-label">Temperatur</div>
+                                    <div class="info-value">${basementTemp.toFixed(1)}°C</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Rel. Luftfeuchtigkeit</div>
+                                    <div class="info-value">${basementRelHumidity}%</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Abs. Luftfeuchtigkeit</div>
+                                    <div class="info-value">${basementAbsHumidity.toFixed(1)} g/m³</div>
+                                </div>
+                            </div>
+                            <p style="margin-top: 15px; color: #6c757d; font-size: 0.9em;">
+                                💡 Diese Werte können über den ⚙️ Einstellungen-Button angepasst werden.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Detailed hourly table
+            html += `
+                <div class="collapsible-section">
+                    <div class="collapsible-header" onclick="toggleCollapsible('hourly-details')">
+                        <h3>📈 Stündliche Übersicht (48 Stunden)</h3>
+                        <span class="collapsible-arrow">▼</span>
+                    </div>
+                    <div class="collapsible-content" id="hourly-details">
+                        <div class="card" style="margin-top: 10px;">
+                            <div class="table-wrapper">
+                            <table class="detail-table">
+                                <thead>
+                                    <tr>
+                                        <th>Zeit</th>
+                                        <th>Temp. (°C)</th>
+                                        <th>Rel. (%)</th>
+                                        <th>Abs. (g/m³)</th>
+                                        <th>Vorteil (g/m³)</th>
+                                        <th>Empfehlung</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+
+            allTimes.forEach(timeData => {
+                const badgeClass = timeData.advice.statusClass === 'success' ? 'badge-success' :
+                                   timeData.advice.statusClass === 'warning' ? 'badge-warning' : 'badge-danger';
+
+                const vorteilText = timeData.difference > 0
+                    ? `+${timeData.difference.toFixed(1)}`
+                    : `${timeData.difference.toFixed(1)}`;
+
+                const vorteilColor = timeData.difference > 1.5
+                    ? 'color: #28a745; font-weight: bold;'
+                    : timeData.difference > 0
+                        ? 'color: #ffc107;'
+                        : 'color: #dc3545;';
+
+                html += `
+                    <tr>
+                        <td>${formatDateTime(timeData.time)}</td>
+                        <td>${timeData.temp.toFixed(1)}</td>
+                        <td>${timeData.relHum}</td>
+                        <td>${timeData.absHum.toFixed(1)}</td>
+                        <td style="${vorteilColor}">${vorteilText}</td>
+                        <td>
+                            <span class="badge ${badgeClass}">${timeData.advice.icon} ${timeData.advice.status}</span>
+                            ${timeData.advice.needsShockVentilation && (timeData.advice.shouldVentilate || timeData.advice.statusClass === 'warning') ? '<br><small style="color: #0066cc; font-weight: bold;">❄️ 5 Min. Stoßlüften</small>' : ''}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                                </tbody>
+                            </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Hints box
+            html += `
+                <div class="hint-box">
+                    <h3>ℹ️ Lüftungskriterien</h3>
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #28a745;">🌡️ LANGES LÜFTEN (Normal):</strong>
+                        <ul style="margin-top: 5px;">
+                            <li><strong>Kriterium:</strong> Außentemperatur ≥ Kellertemperatur</li>
+                            <li><strong>Vorteil:</strong> Keine Gefahr der Auskühlung</li>
+                            <li><strong>Empfehlung:</strong> Kann mehrere Stunden durchgehend gelüftet werden</li>
+                        </ul>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #0066cc;">❄️ STOSSLÜFTEN (5 Minuten):</strong>
+                        <ul style="margin-top: 5px;">
+                            <li><strong>Kriterium:</strong> Außentemperatur < Kellertemperatur</li>
+                            <li><strong>Warnung:</strong> Gefahr der Auskühlung</li>
+                            <li><strong>Empfehlung:</strong> Nur 5 Minuten pro Stunde lüften</li>
+                        </ul>
+                    </div>
+                    <h3 style="margin-top: 15px;">💡 Weitere Hinweise</h3>
+                    <ul>
+                        <li>Lüften Sie nur, wenn die absolute Feuchtigkeit außen niedriger ist als innen</li>
+                        <li>Beste Lüftungszeiten sind meist morgens und abends</li>
+                        <li>Im Sommer ist die Außenluft oft zu feucht zum Kellerlüften</li>
+                        <li>Messen Sie Ihre tatsächlichen Kellerwerte für präzisere Empfehlungen</li>
+                        <li>Datenquelle: Open-Meteo API • Abgerufen am ${new Date().toLocaleString('de-AT')}</li>
+                    </ul>
+                </div>
+            `;
+
+            resultsDiv.innerHTML = html;
+            resultsDiv.classList.add('active');
+        }
+
+        // Auto-start on page load with default values
+        window.addEventListener('load', () => {
+            analyzeVentilation();
+        });
+    </script>
+</body>
+</html>
